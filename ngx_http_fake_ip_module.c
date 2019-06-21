@@ -124,7 +124,7 @@ ngx_module_t ngx_http_fake_ip_module = {
 
 static ngx_int_t
 ngx_http_fake_ip_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
-		    uintptr_t data){
+                    uintptr_t data){
 
     ngx_http_fake_ip_conf_t *fipcf;
     fipcf = ngx_http_get_module_loc_conf(r, ngx_http_fake_ip_module);
@@ -148,23 +148,23 @@ ngx_http_fake_ip_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     case AF_INET:
         ;
         struct sockaddr_in *sin = (struct sockaddr_in *) sa;
-	ngx_memcpy(digst_buf, &sin->sin_addr, sizeof(sin->sin_addr));
-	buf_len += sizeof(sin->sin_addr);
-	break;
+        ngx_memcpy(digst_buf, &sin->sin_addr, sizeof(sin->sin_addr));
+        buf_len += sizeof(sin->sin_addr);
+        break;
 
 #if (NGX_HAVE_INET6)
     
     case AF_INET6:
         ;
-	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sa;
-	if(IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr)){
-	    ngx_memcpy(digst_buf, &sin6->sin6_addr.s6_addr[12], sizeof(in_addr_t));
-	    buf_len += sizeof(in_addr_t);
-	}else{
-	    ngx_memcpy(digst_buf, &sin6->sin6_addr, sizeof(sin6->sin6_addr));
-	    buf_len += sizeof(sin6->sin6_addr);
-	}
-	break;
+        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sa;
+        if(IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr)){
+            ngx_memcpy(digst_buf, &sin6->sin6_addr.s6_addr[12], sizeof(in_addr_t));
+            buf_len += sizeof(in_addr_t);
+        }else{
+            ngx_memcpy(digst_buf, &sin6->sin6_addr, sizeof(sin6->sin6_addr));
+            buf_len += sizeof(sin6->sin6_addr);
+        }
+        break;
 
 #endif
     }
@@ -176,17 +176,17 @@ ngx_http_fake_ip_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     buf_len += sizeof(now_time);
     if(c->log->log_level >= NGX_LOG_DEBUG_HTTP){
         u_char __debug_buf[3 * sizeof(digst_buf) + 1];
-	for(size_t i = 0; i < buf_len; i++){
-	    ngx_sprintf(__debug_buf + 3 * i, "%02xd ", digst_buf[i]);
-	}
-	__debug_buf[3 * buf_len] = '\0';
-	ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+        for(size_t i = 0; i < buf_len; i++){
+            ngx_sprintf(__debug_buf + 3 * i, "%02xd ", digst_buf[i]);
+        }
+        __debug_buf[3 * buf_len] = '\0';
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                        "fake_ip: data in buf: %s", __debug_buf);
     }
     unsigned int mac_len = 0;
     union {
         u_char buf[EVP_MAX_MD_SIZE];
-	in_addr_t in;
+        in_addr_t in;
         struct in6_addr in6;
     } digst_rslt_buf;
 
@@ -195,11 +195,11 @@ ngx_http_fake_ip_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
 
     if(c->log->log_level >= NGX_LOG_DEBUG_HTTP){
         u_char __debug_buf[3 * sizeof(digst_rslt_buf.buf) + 1];
-	for(size_t i = 0; i < mac_len; i++){
-	    ngx_sprintf(__debug_buf + 3 * i, "%02xd ", digst_rslt_buf.buf[i]);
-	}
-	__debug_buf[3 * mac_len] = '\0';
-	ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+        for(size_t i = 0; i < mac_len; i++){
+            ngx_sprintf(__debug_buf + 3 * i, "%02xd ", digst_rslt_buf.buf[i]);
+        }
+        __debug_buf[3 * mac_len] = '\0';
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                        "fake_ip: result mac: %s", __debug_buf);
     }
 
@@ -208,49 +208,49 @@ ngx_http_fake_ip_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     case AF_INET:
         if(buf_len < sizeof(in_addr_t)){
             ngx_log_error(NGX_LOG_CRIT, c->log, 0, 
-	                    "fake_ip: Length of HMAC result is %ui, %ui needed.", 
-			    buf_len, sizeof(in_addr_t));
-	    return NGX_ERROR;
-	}
-	struct sockaddr_in *sin = (struct sockaddr_in *) sa;
-	ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                            "fake_ip: Length of HMAC result is %ui, %ui needed.", 
+                            buf_len, sizeof(in_addr_t));
+            return NGX_ERROR;
+        }
+        struct sockaddr_in *sin = (struct sockaddr_in *) sa;
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                        "fake_ip: v4mask_num: %08xd", ntohl(fipcf->v4mask_num));
-	sin->sin_addr.s_addr = htonl( 
+        sin->sin_addr.s_addr = htonl( 
             (ntohl(sin->sin_addr.s_addr) & ntohl(fipcf->v4mask_num)) | 
-	    (ntohl(digst_rslt_buf.in) & ~ntohl(fipcf->v4mask_num)));
-	break;
+            (ntohl(digst_rslt_buf.in) & ~ntohl(fipcf->v4mask_num)));
+        break;
 #if (NGX_HAVE_INET6)
     case AF_INET6:
-	;
-	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sa;
+        ;
+        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sa;
         if(IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr)){
             if(buf_len < sizeof(in_addr_t)){
                 ngx_log_error(NGX_LOG_CRIT, c->log, 0, 
-	                        "fake_ip: Length of HMAC result is %ui, %ui needed.", 
-	    		    buf_len, sizeof(in_addr_t));
-	        return NGX_ERROR;
-	    }
-	    in_addr_t *in_addr = (in_addr_t *)(&sin6->sin6_addr.s6_addr[12]);
-	    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                                "fake_ip: Length of HMAC result is %ui, %ui needed.", 
+                                buf_len, sizeof(in_addr_t));
+                return NGX_ERROR;
+            }
+            in_addr_t *in_addr = (in_addr_t *)(&sin6->sin6_addr.s6_addr[12]);
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                            "fake_ip: v4mask_num: %08xd", ntohl(fipcf->v4mask_num));
-	    *in_addr = htonl( 
+            *in_addr = htonl( 
                 (ntohl(*in_addr) & ntohl(fipcf->v4mask_num)) | 
-	        (ntohl(digst_rslt_buf.in) & ~ntohl(fipcf->v4mask_num)));
-	} else {
+                (ntohl(digst_rslt_buf.in) & ~ntohl(fipcf->v4mask_num)));
+        } else {
             if(buf_len < sizeof(struct in6_addr)){
                 ngx_log_error(NGX_LOG_CRIT, c->log, 0, 
                                 "fake_ip: Length of HMAC result is %ui, %ui needed.", 
-            		    buf_len, sizeof(struct in6_addr));
+                                buf_len, sizeof(struct in6_addr));
                 return NGX_ERROR;
             }
             for (int n = 0; n < 16; n++) {
                 sin6->sin6_addr.s6_addr[n] = 
                     (sin6->sin6_addr.s6_addr[n] & fipcf->v6mask_num.s6_addr[n]) |
-            	(digst_rslt_buf.in6.s6_addr[n] & ~fipcf->v6mask_num.s6_addr[n]);
+                    (digst_rslt_buf.in6.s6_addr[n] & ~fipcf->v6mask_num.s6_addr[n]);
             }
-	}
+        }
         break;
-#endif	
+#endif        
     }
     size_t len = ngx_sock_ntop(sa, c->socklen, p, NGX_SOCKADDR_STRLEN, 0);
     v->valid = 1;
@@ -313,8 +313,8 @@ static char *ngx_http_fake_ip_merge_conf(ngx_conf_t *cf, void *parent, void *chi
     ngx_uint_t v6_shift = conf->v6mask;
     for(int i = 0; i < 16; i++){
         ngx_uint_t s = (v6_shift > 8) ? 8 : v6_shift;
-	v6_shift -= s;
-	conf->v6mask_num.s6_addr[i] = (u_char) (0xffu << (8 - s));
+        v6_shift -= s;
+        conf->v6mask_num.s6_addr[i] = (u_char) (0xffu << (8 - s));
     }
 #endif
     return NGX_CONF_OK;
@@ -344,7 +344,7 @@ static char *ngx_http_fake_ip_conf_set_str_base64_slot(ngx_conf_t *cf, ngx_comma
 
     if (cmd->post) {
         ngx_conf_post_t *post = cmd->post;
-	return post->post_handler(cf, post, field);
+        return post->post_handler(cf, post, field);
     }
 
     return NGX_CONF_OK;
@@ -356,11 +356,11 @@ static char *ngx_http_fake_ip_check_num(ngx_conf_t *cf, void *post, void *data){
 
     if(check->lo != NGX_CONF_UNSET && *value < check->lo){
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "value should not be less than %ui", check->lo);
-	return NGX_CONF_ERROR;
+        return NGX_CONF_ERROR;
     }
     if(check->hi != NGX_CONF_UNSET && *value >= check->hi){
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "value should be less than %ui", check->hi);
-	return NGX_CONF_ERROR;
+        return NGX_CONF_ERROR;
     }
     return NGX_CONF_OK;
 }
